@@ -662,7 +662,6 @@ func (s *consumerGroupSession) consume(topic string, partition int32) {
 	if pom := s.offsets.findPOM(topic, partition); pom != nil {
 		offset, _ = pom.NextOffset()
 	}
-
 	// create new claim
 	claim, err := newConsumerGroupClaim(s, topic, partition, offset)
 	if err != nil {

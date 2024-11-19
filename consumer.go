@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -403,14 +404,26 @@ func (child *partitionConsumer) chooseStartingOffset(offset int64) error {
 	if err != nil {
 		return err
 	}
+	
+	var lastOffset int64
+	length := len(strconv.FormatInt(offset, 10))
+	if length >= 13 {
+		timeOffset, err := child.consumer.client.GetOffset(child.topic, child.partition, offset)
+		if err != nil {
+			return err
+		}
+		lastOffset = timeOffset
+	} else {
+		lastOffset = offset
+	}
 
 	switch {
-	case offset == OffsetNewest:
+	case lastOffset == OffsetNewest:
 		child.offset = newestOffset
-	case offset == OffsetOldest:
+	case lastOffset == OffsetOldest:
 		child.offset = oldestOffset
-	case offset >= oldestOffset && offset <= newestOffset:
-		child.offset = offset
+	case lastOffset >= oldestOffset && lastOffset <= newestOffset:
+		child.offset = lastOffset
 	default:
 		return ErrOffsetOutOfRange
 	}
