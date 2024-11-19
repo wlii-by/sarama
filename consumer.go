@@ -390,14 +390,17 @@ func (child *partitionConsumer) chooseStartingOffset(offset int64) error {
 	if err != nil {
 		return err
 	}
-
+	lastOffset, err := child.consumer.client.GetOffset(child.topic, child.partition, offset)
+	if err != nil {
+		return err
+	}
 	switch {
-	case offset == OffsetNewest:
+	case lastOffset == OffsetNewest:
 		child.offset = newestOffset
-	case offset == OffsetOldest:
+	case lastOffset == OffsetOldest:
 		child.offset = oldestOffset
-	case offset >= oldestOffset && offset <= newestOffset:
-		child.offset = offset
+	case lastOffset >= oldestOffset && lastOffset <= newestOffset:
+		child.offset = lastOffset
 	default:
 		return ErrOffsetOutOfRange
 	}
